@@ -5,34 +5,48 @@
 # Vars
 
 autocopy=0
-url="https://0x0.st/"
+
+if [ ! -x /usr/bin/curl ] ; then
+  printf "\n"
+      echo "Install curl!"
+  printf "\n"
+      exit 1
+fi
 
 # Functions
 
 usage () {
   filename=$(basename "$0")
   cat <<- EOF
-$url paste client
+Paste client
 
-Usage :
+  Usage :
 
-# Upload a file
-$ $filename [OPTIONS] file
-$ cat file.ext | $filename [OPTIONS]
-
-# Upload text
-$ echo "upaste rocks" | up
-$ up
-upaste
-really
-rocks
-C-d C-d
-
-Options :
     -h    Print this usage
     -a    Enable autocopy in clipboard
-    -t    Set extension, without dot
+    -t    Set extension
+
+  Use the URL variable to select a different paste service. Default
+  is https://0x0.st/. Working instances are: https://ttm.sh/,
+  https://0x0.st/ and https://xzz.dk/
+
+  Examples:
+
+      echo "Text here" | up
+      cat file.[ext] | up [-t] [ext]
+      up filename.[ext]
+
+  Links are logged in ~/.paste
+
 EOF
+}
+
+url() {
+  if [ -n "$URL" ]; then
+    echo "$URL"
+  else
+    echo "https://0x0.st"
+  fi
 }
 
 upload () {
@@ -62,7 +76,7 @@ upload () {
   args="$file;$ext"
 
   # Curl call
-  curl -s -F "$args" "$url"
+  curl -s -F "$args" "$(url)"
 }
 
 autocopy () {
@@ -98,11 +112,10 @@ is_file () {
 }
 
 main () {
-
   # If no piped data
   if [ -t 0 ]
   then
-  
+
     # If no argument, read stdin and save url
     if [ -z "$1" ]
     then
@@ -118,7 +131,7 @@ main () {
       fi
       url=$(upload "$1")
     fi
-  
+
   # Else if piped data
   else
     # Test if argument exists
@@ -129,7 +142,7 @@ main () {
     # Upload and save url
     url=$(upload)
   fi
-  
+
   # Print url
   echo "$url"
 
@@ -139,6 +152,8 @@ main () {
     # Autocopy url
     autocopy "$url"
   fi
+
+  echo $url >> /home/$(whoami)/.paste
 }
 
 # Main
