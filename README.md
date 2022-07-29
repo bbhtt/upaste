@@ -1,23 +1,25 @@
 # upaste
-paste client.  
+
+Paste client
 
 ### Usage
-# Upload a file
-```
-$ up [OPTIONS] file  
-$ cat file.ext | up [OPTIONS]  
-```
 
-# Upload text
 ```
-$ echo "upaste rocks" | up
-$ up
-upaste
-really
-rocks
-C-d C-d
+  Usage :
+
+    -h    Print this usage
+    -a    Enable autocopy in clipboard
+    -t    Set extension
+
+  Use the URL variable to select a different paste service. Default
+  is https://0x0.st/. Working instances are: https://ttm.sh/,
+  https://0x0.st/ and https://xzz.dk/
+
+  Examples:
+
+      echo "Text here" | up
+      cat file.[ext] | up [-t] [ext]
+      up filename.[ext]
+
+  Links are logged in ~/.paste
 ```
-Options :  
-    -h    Print this usage  
-    -a    Enable autocopy in clipboard  
-    -t    Set extension, without dot
