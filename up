@@ -1,12 +1,8 @@
-#!/usr/bin/env sh
-
-# paste client
-
-# Vars
+#!/usr/bin/env bash
 
 autocopy=0
 
-if [ ! -x /usr/bin/curl ] ; then
+if [ ! -x /usr/bin/curl ]; then
   printf "\n"
       echo "Install curl!"
   printf "\n"
@@ -15,7 +11,7 @@ fi
 
 # Functions
 
-usage () {
+usage() {
   filename=$(basename "$0")
   cat <<- EOF
 Paste client
@@ -26,10 +22,16 @@ Paste client
     -a    Enable autocopy in clipboard
     -t    Set extension
 
-  Use the URL variable to select a different paste service. Default
-  is https://0x0.st/. Working instances are: https://ttm.sh/,
-  https://0x0.st/, https://xzz.dk/, https://vern0.me/, https://0.vern.cc/, 
-  https://envs.sh/ and https://null.slipfox.xyz/
+  Use a $HOME/.paste.conf file to select a different paste service. List
+  all URL choices there, one in each line. If a single URL is present
+  that will be chosen. If more than one is present, a random working one
+  will be chosen.
+
+  Default is https://0x0.st/.
+
+  Working instances are: https://x0.at/, https://ttm.sh/,
+  https://0x0.st/, https://xzz.dk/, https://0.vern.cc/, https://envs.sh/
+  and https://null.slipfox.xyz/.
 
   Examples:
 
@@ -37,127 +39,92 @@ Paste client
       cat file.[ext] | up [-t] [ext]
       up filename.[ext]
 
-  Links are logged in ~/.paste
+  Links are logged in $HOME/.paste
 
 EOF
 }
 
-url() {
-  if [ -n "$URL" ]; then
-    echo "$URL"
-  else
-    echo "https://0x0.st"
-  fi
+urlcheck(){
+if [ -f "$HOME"/.paste.conf ]; then
+  cat "$HOME"/.paste.conf |  while read url
+    do
+      curl -sf "$url" > /dev/null
+      if [ ! $? = 6 ];then
+        echo "$url is up"
+        echo "$url" >> "$HOME"/.paste.tmp
+      else
+        echo "$url is down"
+      fi
+    done
+  uploadurl=$(shuf -n 1 "$HOME"/.paste.tmp)
+  echo "Choosing $uploadurl"
+  rm -- "$HOME"/.paste.tmp
+else
+  uploadurl=https://0x0.st/
+  echo "Choosing the default $uploadurl"
+fi
 }
-
-upload () {
-
-  # If extension is set with -t option, set curl ext
-  if [ -n "$extension" ]
-  then
+upload(){
+urlcheck
+  if [ -n "$extension" ]; then
     ext="filename=.$extension"
   fi
-
-  if [ -z "$1" ]
-  then
-    # If argument is empty, upload stdin
+    if [ -z "$1" ]; then
     file="file=@-"
-
-    # If curl ext not set, set it to .txt
-    if [ -z "$ext" ]
-    then
+    if [ -z "$ext" ]; then
       ext="filename=.txt"
     fi
-
   else
-    # Else upload filename
     file="file=@\"$1\""
   fi
-
   args="$file;$ext"
-
-  # Curl call
-  curl -s -F "$args" "$(url)"
+curl -sF "$args" "$uploadurl"|tee -a "$HOME"/.paste
 }
 
-autocopy () {
-  # If xorg or wayland is running
-  if [ -n "$DISPLAY" ]
-  then
-    if [ "$XDG_SESSION_TYPE" = "x11" ]
-    then
-      # If xclip is installed
-      if which xclip >/dev/null 2>&1
-      then
+autocopy(){
+  if [ -n "$DISPLAY" ]; then
+    if [ "$XDG_SESSION_TYPE" = "x11" ]; then
+      if which xclip >/dev/null 2>&1; then
         echo "$1" | xclip
       fi
     fi
-    if [ "$XDG_SESSION_TYPE" = "wayland" ]
-    then
-      # Else if wl-clipboard is installed
-      if which wl-copy >/dev/null 2>&1
-      then
+    if [ "$XDG_SESSION_TYPE" = "wayland" ]; then
+      if which wl-copy >/dev/null 2>&1; then
         wl-copy -p "$1"
       fi
     fi
   fi
 }
 
-is_file () {
-  # Test if first argument is an existing file
-  if [ ! -f "$(realpath "$1")" ]
-  then
+is_file(){
+  if [ ! -f "$(realpath "$1")" ]; then
     echo "File \"$1\" does not exist or is not a regular file"
     exit 2
   fi
 }
 
-main () {
-  # If no piped data
-  if [ -t 0 ]
-  then
-
-    # If no argument, read stdin and save url
-    if [ -z "$1" ]
-    then
+main(){
+  if [ -t 0 ]; then
+    if [ -z "$1" ]; then
       url=$(upload)
-      # Force a newline
       printf "\n"
-    # Else upload argument and save url
     else
-      # Test if file exists and is a regular file
-      if [ -n "$1" ]
-      then
+      if [ -n "$1" ]; then
         is_file "$1"
       fi
       url=$(upload "$1")
     fi
-
-  # Else if piped data
   else
-    # Test if argument exists
-    if [ -n "$1" ]
-    then
+    if [ -n "$1" ]; then
       echo "Warning: ignoring file $1..."
     fi
-    # Upload and save url
     url=$(upload)
   fi
-
-  # Print url
   echo "$url"
-
-  # If autocopy is set
-  if [ "$autocopy" = "1" ]
-  then
-    # Autocopy url
+  if [ "$autocopy" = "1" ]; then
     autocopy "$url"
   fi
-
-  echo $url >> /home/$(whoami)/.paste
 }
-
-# Main
 
 while getopts "hat:" arg
 do
