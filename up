@@ -18,9 +18,9 @@ Paste client
 
   Usage :
 
-    -h    Print this usage
-    -a    Enable autocopy in clipboard
-    -t    Set extension
+    -h, --help    Print this usage
+    -a            Enable autocopy in clipboard
+    -t            Set extension
 
   Use a \$XDG_CONFIG_HOME/.paste.conf file to select a different paste
   service. List all URL choices there, one in each line. If a single URL
@@ -137,6 +137,10 @@ do
       autocopy=1
       ;;
     h)
+      usage
+      exit
+      ;;
+    help)
       usage
       exit
       ;;
