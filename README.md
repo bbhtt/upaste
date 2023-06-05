@@ -5,14 +5,14 @@ Paste client
 
   Usage :
 
-    -h    Print this usage
-    -a    Enable autocopy in clipboard
-    -t    Set extension
+    -h, --help    Print this usage
+    -a            Enable autocopy in clipboard
+    -t            Set extension
 
-  Use a $HOME/.paste.conf file to select a different paste service. List
-  all URL choices there, one in each line. If a single URL is present
-  that will be chosen. If more than one is present, a random working one
-  will be chosen.
+  Use a $XDG_CONFIG_HOME/.paste.conf file to select a different paste
+  service. List all URL choices there, one in each line. If a single URL
+  is present that will be chosen. If more than one is present, a random
+  working one will be chosen.
 
   Default is https://0x0.st/.
 
@@ -26,5 +26,5 @@ Paste client
       cat file.[ext] | up [-t] [ext]
       up filename.[ext]
 
-  Links are logged in $HOME/.paste
+  Links are logged in $XDG_CACHE_HOME/.paste
 ```
