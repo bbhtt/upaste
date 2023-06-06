@@ -22,7 +22,7 @@ Paste client
     -a            Enable autocopy in clipboard
     -t            Set extension
 
-  Use a \$XDG_CONFIG_HOME/.paste.conf file to select a different paste
+  Use a \$XDG_CONFIG_HOME/upaste.conf file to select a different paste
   service. List all URL choices there, one in each line. If a single URL
   is present that will be chosen. If more than one is present, a random
   working one will be chosen.
@@ -39,7 +39,7 @@ Paste client
       cat file.[ext] | up [-t] [ext]
       up filename.[ext]
 
-  Links are logged in \$XDG_CACHE_HOME/.paste
+  Links are logged in \$XDG_CACHE_HOME/upaste_history
 
 EOF
 }
@@ -48,20 +48,20 @@ conf_dir=${XDG_CONFIG_HOME:-$HOME/.config}
 cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}
 
 urlcheck(){
-if [ -f "$conf_dir"/.paste.conf ]; then
-  cat "$conf_dir"/.paste.conf |  while read url
+if [ -f "$conf_dir"/upaste.conf ]; then
+  cat "$conf_dir"/upaste.conf |  while read url
     do
       curl -sf "$url" > /dev/null
       if [ ! $? = 6 ];then
         echo "$url is up"
-        echo "$url" >> "$cache_dir"/.paste.tmp
+        echo "$url" >> "$cache_dir"/upaste.tmp
       else
         echo "$url is down"
       fi
     done
-  uploadurl=$(shuf -n 1 "$cache_dir"/.paste.tmp)
+  uploadurl=$(shuf -n 1 "$cache_dir"/upaste.tmp)
   echo "Choosing $uploadurl"
-  rm -- "$cache_dir"/.paste.tmp
+  rm -- "$cache_dir"/upaste.tmp
 else
   uploadurl=https://0x0.st/
   echo "Choosing the default $uploadurl"
@@ -82,7 +82,7 @@ urlcheck
     file="file=@\"$1\""
   fi
   args="$file;$ext"
-curl -sF "$args" "$uploadurl"|tee -a "$cache_dir"/.paste
+curl -sF "$args" "$uploadurl"|tee -a "$cache_dir"/upaste_history
 }
 
 autocopy(){
