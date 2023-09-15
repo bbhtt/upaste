@@ -12,13 +12,12 @@ fi
 # Functions
 
 usage() {
-  filename=$(basename "$0")
   cat <<- EOF
 Paste client
 
   Usage :
 
-    -h, --help    Print this usage
+    -h            Print this usage
     -a            Enable autocopy in clipboard
     -t            Set extension
 
@@ -49,16 +48,17 @@ cache_dir=${XDG_CACHE_HOME:-$HOME/.cache}
 
 urlcheck(){
 if [ -f "$conf_dir"/upaste.conf ]; then
-  cat "$conf_dir"/upaste.conf |  while read url
+  while read -r url
     do
-      curl -sf "$url" > /dev/null
+      printf "$url"
+      curl -sf "$url" > /dev/null 2>&1
       if [ ! $? = 6 ];then
         echo "$url is up"
         echo "$url" >> "$cache_dir"/upaste.tmp
       else
         echo "$url is down"
       fi
-    done
+    done < "$conf_dir"/upaste.conf
   uploadurl=$(shuf -n 1 "$cache_dir"/upaste.tmp)
   echo "Choosing $uploadurl"
   rm -- "$cache_dir"/upaste.tmp
@@ -137,10 +137,6 @@ do
       autocopy=1
       ;;
     h)
-      usage
-      exit
-      ;;
-    help)
       usage
       exit
       ;;
